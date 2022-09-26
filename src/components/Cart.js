@@ -4,6 +4,7 @@ import {useSelector,useDispatch} from 'react-redux';
 import CartItem from './CartItem';
 import {offers} from '../data/data'
 
+let offers_list = []
 function Cart() {
     const cart = useSelector((state) => state.cartItems);
     const [cartItems ,setCartItems]=useState([])
@@ -11,9 +12,10 @@ function Cart() {
     const [subtotal, setSubtotal] = useState(0)
     const [discount, setDiscount] = useState(0)
     const [total, setTotal] = useState(0)
-    const [newPrice, setNewPrice] = useState(false)
 
     useEffect(async()=> {
+
+        offers_list = []
         setCartItems(cart.cartItems)
         getTotal()
     })
@@ -21,7 +23,6 @@ function Cart() {
     const getTotal = () => {
         let sub_total = 0
         let dis_count = 0
-        setNewPrice(false)
         cartItems && cartItems.map((x)=> {
             sub_total = sub_total + x.qty * x.price
             setSubtotal(sub_total)
@@ -30,19 +31,21 @@ function Cart() {
             if(offer && offer.id === 'of2') {
                 let nb_free = parseInt(x.qty/offer.qty_1)
                 dis_count = dis_count + x.price * nb_free
-                
+                if(x.qty>=offer.qty_1)
+                    offers_list.push({id:'2',price:x.qty * x.price, newPrice : (x.qty-nb_free)*x.price})
             }else {
                 if(offer && offer.id === 'of1') {
                     let prod1 = cartItems && cartItems.find((el)=> el.id === offer.id_1)
                     if(prod1 && prod1.qty >= offer.qty_1) {
                         let new_price = offer.remise * x.price /100
                         let qty_discount1 = parseInt(prod1.qty/2)
-                        setNewPrice(true)
                         if(x.qty <= qty_discount1) {
                             dis_count = dis_count + x.qty* new_price
+                            offers_list.push({id:'1', price:x.qty * x.price, newPrice : x.qty * x.price - (x.qty* new_price)})
                         } 
                         else {
                             dis_count = dis_count + (qty_discount1 * new_price)
+                            offers_list.push({id:'1', price:x.qty * x.price, newPrice : x.qty * x.price - (qty_discount1* new_price)})
                         }
                     }
                 }
@@ -54,6 +57,7 @@ function Cart() {
         setDiscount(0)
         setTotal(0)
         setSubtotal(0)
+        offers_list = []
     }
 }
 
@@ -77,7 +81,7 @@ function Cart() {
                         price = {item.price}
                         oldPrice = {item.oldPrice}
                         qty = {item.qty}
-                        newPrice = {newPrice}
+                        offers = {offers_list}
                     />
                 )}) 
             : (<h4> No item is selected !</h4>)

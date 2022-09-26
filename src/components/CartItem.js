@@ -5,11 +5,26 @@ import {updateCartItem, removeFromCart} from '../redux/actions';
 
 function CardItem(props) {
     const [qty, setQty] = useState(props.qty)
+    const [price, setPrice] = useState(props.qty*props.price)
+    const [newPrice, setNewPrice] = useState(0)
     const dispatch = useDispatch()
 
     useEffect(()=> {
         setQty(props.qty)
-    },[props.qty])
+        if(props.offers.length ){
+            let exist = props.offers.find((el)=> el.id === props.id)
+            if(exist) {
+                setPrice(exist.price)
+                setNewPrice(exist.newPrice)
+            }else {
+                setPrice(props.qty*props.price)
+                setNewPrice(0)
+            }
+        }else {
+            setPrice(props.qty*props.price)
+            setNewPrice(0)
+        }
+    },[props.qty, props.offers])
 
     const decreaseQtyHandler = (id) => {
         if(qty-1===0) dispatch(removeFromCart(id))
@@ -48,14 +63,14 @@ function CardItem(props) {
                 </div>
             </Col>
             <Col xs="3" md='3' className='price'>
-                <p style = {props.newPrice && props.id ==='1' 
-                        ? {textDecoration: 'line-through', color:'red', marginTop:'20px'} 
-                        : { marginTop:'20px'}}>
-                    £{props.price}
+                <p style = { newPrice
+                            ? {textDecoration: 'line-through', color:'red', marginTop:'20px'} 
+                            : { marginTop:'20px'}}>
+                    £{price.toFixed(2)}
                 </p>
-                { props.newPrice && props.id ==='1' && <p style={{marginTop: '-15px'}}>
-                    £{props.oldPrice}
-                </p>}
+                {newPrice 
+                ? <p style={{marginTop: '-15px'}}> £{newPrice.toFixed(2)} </p> 
+                : ''} 
             </Col>
         </Row>
     </Container>
